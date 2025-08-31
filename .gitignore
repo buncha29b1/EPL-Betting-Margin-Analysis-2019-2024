@@ -1,0 +1,15 @@
+# R / RStudio
+.Rhistory
+.Rapp.history
+.RData
+.Ruserdata
+.Rproj.user/
+
+# renv (keep renv.lock; ignore local libs)
+renv/library/
+renv/staging/
+
+# Rmd/Quarto caches (if any)
+*_cache/
+.cache/
+.quarto/
