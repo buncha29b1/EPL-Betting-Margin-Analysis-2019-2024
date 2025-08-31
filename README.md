@@ -17,6 +17,9 @@ This project analyzes **five EPL seasons (2019–20 → 2023–24)** to understa
 ---
 
 ## 🗂 Project Structure
+
+```
+.
 ├── Data/
 │   ├── 19-20.csv
 │   ├── 20-21.csv
@@ -28,5 +31,6 @@ This project analyzes **five EPL seasons (2019–20 → 2023–24)** to understa
 ├── DA220_Final_Project_Report.pdf  # Full write-up
 ├── Final Project Proposal.pdf       # Original proposal & scope
 └── README.md                        # (this file)
+```
 
-Data source: **Football-Data.co.uk** (EPL season match odds, aggregated at match level).
+Data source: [Football-Data.co.uk](https://www.football-data.co.uk/englandm.php) (EPL season match odds, aggregated at match level).
