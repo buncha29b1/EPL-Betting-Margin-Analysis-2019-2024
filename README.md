@@ -83,5 +83,12 @@ R (tidyverse, dplyr, ggplot2, lubridate). Analysis scripted in an R Markdown/Qua
 ---
 
 ## 📚 References
-[Birches Health. 2024. The consolidation of the sports betting industry.](https://bircheshealth.com/resources/consolidation-sports-betting-industry)
-[Hegarty T, Whelan K. 2024. Comparing two methods for testing the efficiency of sports betting markets. UCD Centre for Economic Research Working Paper Series WP24/03.](https://www.ucd.ie/economics/t4media/WP24_03.pdf)
+- [Birches Health. 2024. The consolidation of the sports betting industry.](https://bircheshealth.com/resources/consolidation-sports-betting-industry)
+- [Hegarty T, Whelan K. 2024. Comparing two methods for testing the efficiency of sports betting markets. UCD Centre for Economic Research Working Paper Series WP24/03.](https://www.ucd.ie/economics/t4media/WP24_03.pdf)
+
+---
+
+## 📬 Contact
+- Khoi Van: van_k1@denison.edu
+- Harry Nguyen: nguyen_h11@denison.edu
+- Duc Bui: bui_d3@denison.edu
