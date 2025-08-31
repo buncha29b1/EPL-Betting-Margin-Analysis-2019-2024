@@ -26,6 +26,7 @@ This project analyzes **five EPL seasons (2019–20 → 2023–24)** to understa
 │   ├── 21-22.csv
 │   ├── 22-23.csv
 │   └── 23-24.csv
+|   .gitignore
 ├── Final Project Code.Rmd          # Reproducible R/Quarto analysis
 ├── Final Project Code.html         # Rendered notebook (open in browser)
 ├── DA220_Final_Project_Report.pdf  # Full write-up
