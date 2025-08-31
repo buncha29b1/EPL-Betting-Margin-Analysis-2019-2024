@@ -1,0 +1,257 @@
+---
+title: "Final Project Code 2"
+date: "6 May 2025"
+format: 
+  html:
+    number-sections: true
+    number-depth: 3
+    fig-dpi: 500
+    fig-align: center
+    fig-height: 4
+    fig-width: 6
+execute: 
+  echo: true
+  warning: false
+  message: false
+---
+
+## How Bookmakers Make Money? A Statistical Analysis on Five Premier League Seasons
+
+```{r}
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+```
+
+```{r}
+data1920 = read.csv("Data/19-20.csv")
+data2021 = read.csv("Data/20-21.csv")
+data2122 = read.csv("Data/21-22.csv")
+data2223 = read.csv("Data/22-23.csv")
+data2324 = read.csv("Data/23-24.csv")
+df = rbind(data1920, data2021, data2122, data2223, data2324)
+```
+
+```{r}
+df <- df %>%
+  mutate(margin = 1/AvgH + 1/AvgD + 1/AvgA - 1)
+```
+
+#### Chi-squared test: Is there an association between "high" and "low" margin and whether the home team wins/draws/loses? A margin is considered "low" if it is less than or equal to the median margin of matches.
+
+Null hypothesis: Margin category is not associated with result of home team in a match.
+
+```{r}
+df <- df %>%
+  mutate(margin_cat = ifelse(margin <= median(df$margin, na.rm = TRUE), "Low", "High"))
+
+df$Date <- dmy(df$Date)
+
+df <- df %>%
+  mutate(season = case_when(
+    Date >= as.Date("2019-08-01") & Date <= as.Date("2020-07-31") ~ "19-20",
+    Date >= as.Date("2020-08-01") & Date <= as.Date("2021-07-31") ~ "20-21",
+    Date >= as.Date("2021-08-01") & Date <= as.Date("2022-07-31") ~ "21-22",
+    Date >= as.Date("2022-08-01") & Date <= as.Date("2023-07-31") ~ "22-23",
+    TRUE                                                  ~ "23-24"
+  ))
+
+df$margin_cat <- factor(df$margin_cat, levels = c("Low", "High"))
+
+df$result_cat <- factor(df$FTR,
+                        levels = c("H", "D", "A"),
+                        labels = c("Home Win", "Draw", "Away Win"))
+
+cont_tbl <- table(df$margin_cat, df$result_cat)
+print(cont_tbl)
+
+chisq_res <- chisq.test(cont_tbl)
+print(chisq_res)
+
+print(chisq_res$expected)
+```
+
+X-squared = 2.1543, df = 2, p-value = 0.3406.
+This means that we fail to reject the null hypothesis. In other words, we don't have evidence that is statistically significant enough to reject it, and we can say that margin category is not associated with home team results.
+
+```{r}
+df_cont <- as.data.frame(cont_tbl)
+
+ggplot(df_cont,
+       aes(x = Var2, y = Freq, fill = Var1)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title    = "Match Outcome Counts by Margin Category",
+    x        = "Match Outcome",
+    y        = "Count",
+    fill     = "Margin Category"
+  ) +
+  theme_minimal()
+```
+
+#### Chi-squared test: Do some seasons show disproportionately more "high-margin" matches than others?
+
+```{r}
+df$season      <- factor(df$season, levels = c("19-20","20-21","21-22","22-23","23-24"))
+df$margin_cat  <- factor(df$margin_cat, levels = c("Low","High"))
+
+cont_season_margin <- table(df$season, df$margin_cat)
+print(cont_season_margin)
+
+chisq_season <- chisq.test(cont_season_margin)
+print(chisq_season)
+
+print(chisq_season$expected)
+```
+
+X-squared = 333.12, df = 4, p-value < 2.2e-16.
+This means that we have statistically significant evidence to reject the null hypothesis, so we can say that some seasons show disproportionately more "high-margin" matches than others.
+
+```{r}
+df_cont2 <- as.data.frame(cont_season_margin)
+
+ggplot(df_cont2,
+       aes(x = Var1, y = Freq, fill = Var2)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title    = "Margin Category Counts by Season",
+    x        = "Season",
+    y        = "Count",
+    fill     = "Margin Category"
+  ) +
+  theme_minimal()
+```
+
+#### Do bookmakers charge a different average margin when the home team is favorite vs when it is the underdog?
+
+Null hypothesis: Average margin when the home team is favorite and when the home team is underdog are the same.
+
+```{r}
+df <- df %>%
+  mutate(
+    fav_flag = if_else(AvgH < AvgA, "HomeFav", "HomeUnderdog"),
+    fav_flag = factor(fav_flag, levels = c("HomeFav","HomeUnderdog"))
+  )
+
+df %>% 
+  group_by(fav_flag) %>% 
+  summarise(
+    n        = n(),
+    mean_m   = mean(margin, na.rm=TRUE),
+    sd_m     = sd(margin,   na.rm=TRUE)
+  )
+
+tt <- t.test(
+  margin ~ fav_flag,
+  data     = df,
+  var.equal = TRUE   # or FALSE if variances differ
+)
+print(tt)
+tt$conf.int
+```
+
+t = 0.064848, df = 1898, p-value = 0.9483
+95% CI: -0.0002179087  0.0002328119
+This confidence interval, combined with a high p-value, suggest that we don't have statistically significant evidence to reject the null hypothesis. This means that the average margin when the home team is favorite is the same as when the home team is underdog, and is likely due to random.
+
+#### Has the average margin in 2023-2024 changed significantly compared to 2019-2020?
+
+```{r}
+data2324 <- data2324 %>%
+  mutate(margin = 1/AvgH + 1/AvgD + 1/AvgA - 1)
+
+data1920 <- data1920 %>%
+  mutate(margin = 1/AvgH + 1/AvgD + 1/AvgA - 1)
+
+tt2 <- t.test(data1920$margin, data2324$margin)
+print(tt2)
+
+tt2$conf.int
+
+```
+
+t = 8.0775, df = 757.13, p-value = 2.605e-15
+With this p-value, we have statistically significant evidence to reject the null hypothesis. This means that the true difference in bookmaker average margin between season 2023-24 and season 2019-20 is not 0, or the average margin has changed significantly. In fact, the 95% confidence interval for the difference is 0.0009966344 0.0016366023.
+
+Convert decimal odds to American odds, and use odd index for linear regression, where:
+odd index = American odds - 100 if American odds > 0.
+odd index = American odds + 100 if American odds < 0.
+
+```{r}
+df <- df %>%
+  mutate(`AvgH(Am)` = ifelse(AvgH < 2, 100/(1-AvgH), 100*(AvgH - 1)))
+
+df <- df %>%
+  mutate(`AvgD(Am)` = ifelse(AvgD < 2, 100/(1-AvgD), 100*(AvgD - 1)))
+
+df <- df %>%
+  mutate(`AvgA(Am)` = ifelse(AvgA < 2, 100/(1-AvgA), 100*(AvgA - 1)))
+
+df <- df %>%
+  mutate(AvgHIndex = ifelse(`AvgH(Am)` > 0, (`AvgH(Am)` - 100), (`AvgH(Am)` + 100)))
+
+df <- df %>%
+  mutate(AvgDIndex = ifelse(`AvgD(Am)` > 0, (`AvgD(Am)` - 100), (`AvgD(Am)` + 100)))
+
+df <- df %>%
+  mutate(AvgAIndex = ifelse(`AvgA(Am)` > 0, (`AvgA(Am)` - 100), (`AvgA(Am)` + 100)))
+```
+
+#### To what extent do the bookmaker's own odd index explain the size of the margin?
+
+```{r}
+model1 <- lm(margin~AvgHIndex+AvgDIndex+AvgAIndex,df)
+summary(model1)
+
+# Residuals vs fitted plot to check for linearity and homoscedasticity.
+plot(model1, which = 1)
+
+# Q-Q plot to check for normality of residuals.
+plot(model1, which = 2)
+```
+
+#### After controlling for odd indices, do bookmakers systematically charge a different margin when the home side is favorite vs the underdog?
+
+```{r}
+df <- df %>%
+  mutate(isHomeFav = if_else(AvgH < AvgA, 1, 0))
+
+model2 <- lm(margin~AvgHIndex+AvgDIndex+AvgAIndex+isHomeFav,df)
+summary(model2)
+
+# Residuals vs fitted plot to check for linearity and homoscedasticity.
+plot(model2, which = 1)
+
+# Q-Q plot to check for normality of residuals.
+plot(model2, which = 2)
+```
+
+#### Do bookmakers margins vary across seasons, after accounting for implied probabilities?
+
+```{r}
+model3 <- lm(margin~AvgHIndex+AvgDIndex+AvgAIndex+season,df)
+summary(model3)
+
+# Residuals vs fitted plot to check for linearity and homoscedasticity.
+plot(model3, which = 1)
+
+# Q-Q plot to check for normality of residuals.
+plot(model3, which = 2)
+```
+
+#### Which combination of match-level factors - odd index, favorite status, and season - best predict the margin?
+
+```{r}
+model4 <- lm(margin~AvgHIndex+AvgDIndex+AvgAIndex+isHomeFav+season,df)
+summary(model4)
+
+# Residuals vs fitted plot to check for linearity and homoscedasticity.
+plot(model4, which = 1)
+
+# Q-Q plot to check for normality of residuals.
+plot(model4, which = 2)
+```
+
+
+
